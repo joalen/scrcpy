@@ -19,7 +19,7 @@ jobs:
           sudo apt-get install -y libsdl2-dev libavdevice-* libusb-1.0-0 libusb-1.0-0-dev
           
       - name: Build repository 
-        run: ./install-release.sh 
+        run: ./install_release.sh 
       
       - name: Install Klee and STP dependencies
         run: |
