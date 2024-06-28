@@ -38,8 +38,6 @@ jobs:
       
       - name: Run VMware Chap Analyzer
         run: |
-          set +e
-
           directory="$GITHUB_WORKSPACE"
           ulimit -c unlimited
 
