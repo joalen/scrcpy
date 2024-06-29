@@ -55,11 +55,7 @@ jobs:
       - name: Setup MacPorts
         if: runner.os == 'macOS'
         uses: melusina-org/setup-macports@v1.1.4
-            
-      - uses: melusina-org/setup-macports@v1
-        with:
-          parameters: 'testsuite/run-testsuite-on-macos-12.yaml'
-      
+          
       - name: Install Klee and STP dependencies (macOS)
         if: runner.os == 'macOS'
         run: | 
