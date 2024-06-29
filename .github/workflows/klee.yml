@@ -22,20 +22,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y ffmpeg libsdl2-2.0-0 adb libusb-1.0-0 gcc git pkg-config meson ninja-build libsdl2-dev \
                  libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
-                 libswresample-dev libusb-1.0-0-dev openjdk-17-jdk 
+                 libswresample-dev libusb-1.0-0-dev openjdk-17-jdk android-sdk
+          export ANDROID_SDK_ROOT=~/Android/Sdk
 
       - name: Install dependencies for project (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew tap homebrew/cask-versions
+          brew install sdl2 ffms2 libusb meson ffmpeg ninja pkg-config
+          brew install --cask android-platform-tools
+          brew install --cask android-sdk
+          export ANDROID_SDK_ROOT=~/Library/Android/sdk
           brew install adoptopenjdk/openjdk/adoptopenjdk17
           export JAVA_HOME="$(/usr/libexec/java_home --version 1.17)"
           export PATH="$JAVA_HOME/bin:$PATH"
-          brew install sdl2 ffms2 libusb meson ffmpeg ninja pkg-config
-          brew install --cask android-platform-tools
           
       - name: Build repository 
-        run: ./install_release.sh 
+        run: |
+          meson setup x --buildtype=release --strip -Db_lto=true
+          ninja -Cx
       
       - name: Install Klee and STP dependencies (Linux)
         if: runner.os == 'Linux'
