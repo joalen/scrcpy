@@ -16,13 +16,19 @@ jobs:
         with:
           ref: 576e7552a29e30b40205f81f2ff4d461f018313f
 
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+        
       - name: Install dependencies for project (Linux)
         if: runner.os == 'Linux'
         run: | 
           sudo apt-get update
           sudo apt-get install -y ffmpeg libsdl2-2.0-0 adb libusb-1.0-0 gcc git pkg-config meson ninja-build libsdl2-dev \
                  libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
-                 libswresample-dev libusb-1.0-0-dev openjdk-17-jdk android-sdk
+                 libswresample-dev libusb-1.0-0-dev android-sdk
           export ANDROID_SDK_ROOT=~/Android/Sdk
 
       - name: Install dependencies for project (macOS)
@@ -32,9 +38,6 @@ jobs:
           brew install --cask android-platform-tools
           brew install --cask android-sdk
           export ANDROID_SDK_ROOT=~/Library/Android/sdk
-          brew install adoptopenjdk/openjdk/adoptopenjdk17
-          export JAVA_HOME="$(/usr/libexec/java_home --version 1.17)"
-          export PATH="$JAVA_HOME/bin:$PATH"
           
       - name: Build repository 
         run: |
