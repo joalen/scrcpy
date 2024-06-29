@@ -62,6 +62,7 @@ jobs:
            ./configure && make && sudo make install
            cd ../
            rm -rf MacPorts-2.9.3*
+           echo "/opt/local/bin:/opt/local/sbin:$PATH" >> $GITHUB_PATH
            sudo port -v selfupdate
            sudo port install clang-13
            sudo port install llvm-13
