@@ -65,6 +65,9 @@ jobs:
            sudo port install clang-13
            sudo port install llvm-13
            ulimit -s 65532
+           echo "/usr/local/bin" >> $GITHUB_PATH
+           echo "/opt/homebrew/bin" >> $GITHUB_PATH
+           echo "/opt/local/bin" >> $GITHUB_PATH
            
       - name: Install STP (Linux)
         if: runner.os == 'Linux'
