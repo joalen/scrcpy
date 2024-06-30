@@ -1,0 +1,91 @@
+name: Run Address Sanitizer
+
+on:
+  push:
+
+jobs:
+  run-asan:
+    name: '${{ matrix.os }}'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, macos-latest]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2 
+        with:
+          ref: 576e7552a29e30b40205f81f2ff4d461f018313f
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+        
+      - name: Install dependencies for project (Linux)
+        if: runner.os == 'Linux'
+        run: | 
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libsdl2-2.0-0 adb libusb-1.0-0 gcc git pkg-config meson ninja-build libsdl2-dev \
+                 libavcodec-dev libavdevice-dev libavformat-dev libavutil-dev \
+                 libswresample-dev libusb-1.0-0-dev android-sdk
+          export ANDROID_SDK_ROOT=~/Android/Sdk
+
+      - name: Install dependencies for project (macOS)
+        if: runner.os == 'macOS'
+        run: | 
+          brew install sdl2 ffmpeg libusb
+          brew install pkg-config meson
+          brew install --cask android-sdk
+          export ANDROID_SDK_ROOT=~/Library/Android/sdk
+          
+      - name: Build repository
+        run: |
+          meson setup x --buildtype=release --strip -Db_lto=true
+          ninja -Cx
+          
+      - name: Install Address Sanitizer dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get install -y clang-14 libclang-14-dev llvm-14 llvm-14-dev llvm-14-tools llvm-14-linker-tools
+
+      - name: Install Address Sanitizer dependencies (macOS) 
+        if: runner.os == 'macOS' 
+        run: |
+          brew update
+          brew install llvm ninja
+      
+      - name: Run Google Address Sanitizer
+        shell: bash
+        run: |
+          #!/bin/bash
+          set +e 
+          
+          files=$(find . -type f)
+          failed_compilations=0
+          successful_compilations=0
+          TIMEOUT_DURATION=60
+
+          for file in $files; do
+              if [[ "$file" == *.c || "$file" == *.cpp ]]; then
+                  include_dirs=$(find . -name '*.h' -exec dirname {} + | sort -u | sed 's/^/-I /')
+                  clang -I "$include_dirs" -fsanitize=address -O1 -fno-omit-frame-pointer -fno-common -fsanitize-recover=address -g "$file" -o ./compiled.out > compilation.log 2>&1
+                    if [ $? -eq 0 ]; then
+                        timeout $TIMEOUT_DURATION ./compiled.out
+                        exit_status=$?
+                          if [ $exit_status -ne 0 ]; then
+                              ((successful_compilations += 1))
+                              cat compilation.log
+                              echo "--------------------------------------------------"
+                          else
+                              ((failed_compilations += 1))
+                          fi
+                    else
+                        ((failed_compilations += 1))
+                    fi
+                    rm -f ./compiled.out
+              fi
+          done
+
+          echo "Address Sanitizer Failures: $failed_compilations"
+          echo "Address Sanitizer Successes: $successful_compilations"
