@@ -76,7 +76,7 @@ jobs:
                       continue  # Skip to the next file on compilation error
                   fi
 
-                  gtimeout $TIMEOUT_DURATION ./compiled.out
+                  timeout $TIMEOUT_DURATION ./compiled.out
                   exit_status=$?
 
                   if [ $exit_status -eq 1 ]; then
