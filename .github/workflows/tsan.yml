@@ -33,6 +33,10 @@ jobs:
           
       - name: Build repository 
         run: | 
+          export CC=clang
+          export CXX=clang++
+          export CFLAGS="-fsanitize=thread -fPIE -O2 -g -gcolumn-info"
+          export LDFLAGS="-fsanitize=thread -pie"
           meson setup x --buildtype=release --strip -Db_lto=true
           ninja -Cx
 
@@ -46,21 +50,25 @@ jobs:
             #!/bin/bash
             set +e
 
-            files=$(find . -type f)
-            TIMEOUT_DURATION=10
-
-            for file in $files; do
-                if [[ "$file" == *.c || "$file" == *.cpp ]]; then
-                    include_dirs=$(find . -name '*.h' -exec dirname {} + | sort -u | sed 's/^/-I /')
-                    if ! timeout 60 clang -I "$include_dirs" -fsanitize=thread -fPIE -pie -O2  -g "$file" -o ./compiled.out > /dev/null 2> /tmp/clang_errors.txt; then
-                        exit_code=$?
-                        if [ $exit_code -eq 1 ]; then
-                            continue
-                        fi
-                        continue 
-                    fi
-
-                    timeout $TIMEOUT_DURATION ./compiled.out
-                    rm -f ./compiled.out
-                fi
+            DIRECTORY=$(pwd)
+            
+            is_executable() {
+              local file="$1"
+              if file "$file" | grep -q 'ELF 64-bit'; then
+                return 0
+              else
+                return 1
+              fi
+            }
+            
+            run_with_tsan() {
+              local executable="$1"
+              TSAN_OPTIONS="force_seq_cst_atomics=1 exitcode=1 verbosity=2" timeout 10s "$executable"
+              local exit_status=$?
+            }
+                          
+            find "$DIRECTORY" -type f -executable | while read -r file; do
+              if is_executable "$file"; then
+                run_with_tsan "$file"
+              fi
             done
