@@ -46,7 +46,7 @@ jobs:
           #!/bin/bash
           set +e 
 
-          echo "<----------------------Start Valgrind Service---------------------->""
+          echo "<----------------------Start Valgrind Service---------------------->"
           
           is_executable() {
             local file="$1"
