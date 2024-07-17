@@ -33,7 +33,7 @@ jobs:
           
       - name: Build repository 
         run: | 
-          export CC=gcc && export CXX=g++ && export CFLAGS="-g -fno-inline -fno-omit-frame-pointer" && export LDFLAGS="
+          export CC=gcc && export CXX=g++ && export CFLAGS="-g -fno-inline -fno-omit-frame-pointer" && export LDFLAGS=""
           meson setup x --buildtype=release --strip -Db_lto=true
           ninja -Cx
         continue-on-error: true 
