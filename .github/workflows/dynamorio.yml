@@ -43,14 +43,11 @@ jobs:
           sudo apt-get install -y libunwind8
           wget -P /tmp/ https://github.com/DynamoRIO/dynamorio/releases/download/release_10.0.0/DynamoRIO-Linux-10.0.0.tar.gz && tar -xzf /tmp/DynamoRIO-Linux-10.0.0.tar.gz -C /tmp/
            
-      - name: Export environment variables for running DynamoRIO
-        run: | 
+      - name: Run DynamoRIO
+        run: |
           export DYNAMORIO_HOME="/tmp/DynamoRIO-Linux-10.0.0"
           export GITHUB_PATH="$DYNAMORIO_HOME/bin64:$DYNAMORIO_HOME/tools/bin64:$GITHUB_PATH"
           export LD_LIBRARY_PATH="$DYNAMORIO_HOME/lib64:$LD_LIBRARY_PATH"
-      
-      - name: Run DynamoRIO
-        run: |
           #!/bin/bash
           set +e 
 
