@@ -49,12 +49,7 @@ jobs:
           mkdir gcovlogs
           echo "=========[GCOV Service Started!]========="
 
-          if [ -z "$1" ]; then
-            echo "Usage: $0 <directory>"
-            exit 1
-          fi
-
-          DIRECTORY="$1"
+          DIRECTORY=.
 
           is_executable() {
             local file="$1"
