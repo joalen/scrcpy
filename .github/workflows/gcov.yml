@@ -70,7 +70,7 @@ jobs:
               return  # Skip gcov analysis on timeout
             fi
             
-            gcov --all-blocks --branch-probabilities --branch-counts --function-summaries -H --use-colors --demangled-names --stdout --unconditional-branches --verbose "$executable" > ./gcovlogs/"$executable".gcov.log
+            gcov --all-blocks --branch-probabilities --branch-counts --function-summaries -H --use-colors --demangled-names --unconditional-branches --verbose "$executable" > ./gcovlogs/"$executable".gcov.log
           }
 
           find "$DIRECTORY" -type f -executable | while read -r file; do
