@@ -74,19 +74,39 @@ jobs:
           
       - name: Run Klee Analyzer
         run: |
-          set +e
-
+          #!/bin/bash
+          mkdir -p klee_reports
+          set +e 
+          
           include_dirs=$(find . -name '*.h' -exec dirname {} + | sort -u | sed 's/^/-I /')
-
-          find . -name "*.c" -exec grep -q "int main" {} \; -print0 | while IFS= read -r -d '' file; do
+          
+          while IFS= read -r -d '' file; do
               bc_file="${file%.c}.bc"
               if clang -I "$include_dirs" -emit-llvm -c -g -O0 -Xclang -disable-O0-optnone "$file" -o "$bc_file" 2>/dev/null; then
-                  if ! /usr/lib/llvm-14/bin/llvm-nm "$PWD/$bc_file" | grep -q " T main"; then
+                  if ! /usr/lib/llvm-13/bin/llvm-nm "$PWD/$bc_file" | grep -q " T main"; then
                       rm "$bc_file"
                   else
-                      /tmp/klee/build/bin/klee "$bc_file"
+                      klee_output=$(/tmp/klee/build/bin/klee "$bc_file" 2>&1 | tee -a "./klee_reports/${file}_klee_report")
+                      klee_exit_code=$?
+          
+                      if [[ $klee_exit_code -eq 0 ]]; then
+                          /tmp/klee/build/bin/klee "$bc_file"
+                          echo ""
+                          echo ""
+                          echo ""
+                      elif [[ $klee_exit_code -eq 1 && $klee_output =~ "Invalid record" ]]; then
+                         	continue 
+                      else
+                          continue
+                      fi
                   fi
               else
                   continue
               fi
-          done
+          done < <(find . -name "*.c" -exec grep -q "int main" {} \; -print0)
+
+      - name: Upload Klee reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: klee-report-${{ github.event.repository.name}}-on-${{ matrix.os }}-from_branch_${{ github.ref_name }}
+          path: './klee_reports/*'
